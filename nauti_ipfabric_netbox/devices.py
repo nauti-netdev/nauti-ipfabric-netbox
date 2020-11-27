@@ -7,12 +7,13 @@ from nauti.collection import get_collection
 from nauti.diff import diff
 
 
-@Reconciler.register(origin='ipfabric', target='netbox', collection='devices')
+@Reconciler.register(origin="ipfabric", target="netbox", collection="devices")
 class IPFabricNetboxDeviceCollectionReconciler(Reconciler):
     """
     This class defines the reconcile methods to sync the differences between the
     IP Fabric and the Netbox systems for the "devices" collection.
     """
+
     async def add_items(self):
 
         # -------------------------------------------------------------------------
@@ -33,7 +34,9 @@ class IPFabricNetboxDeviceCollectionReconciler(Reconciler):
                 log.error(f"FAIL: create device {item['hostname']}: {_res.text}")
                 return
 
-            log.info(f"CREATE:OK: device {item['hostname']} ... creating primary IP ... ")
+            log.info(
+                f"CREATE:OK: device {item['hostname']} ... creating primary IP ... "
+            )
             nb_col.source_records.append(_res.json())
 
         await nb_col.add_items(items=missing, callback=_report_device)
@@ -142,6 +145,11 @@ class IPFabricNetboxDeviceCollectionReconciler(Reconciler):
             print(f"CREATE:OK: interface {hname}, {iname}.")
             nb_col_ifaces.source_records.append(_res.json())
 
+        if diff_ifaces.missing:
+            await nb_col_ifaces.add_items(
+                items=diff_ifaces.missing, callback=_report_iface
+            )
+
         def _report_ipaddr(item, _res: Response):
             _key, _fields = item
             hname, iname, ipaddr = (
@@ -158,12 +166,7 @@ class IPFabricNetboxDeviceCollectionReconciler(Reconciler):
             nb_col_ipaddrs.source_records.append(_res.json())
             log.info(f"CREATE:OK: {ident}.")
 
-        if diff_ifaces:
-            await nb_col_ifaces.add_items(
-                items=diff_ifaces.missing, callback=_report_iface
-            )
-
-        if diff_ipaddrs:
+        if diff_ipaddrs.missing:
             await nb_col_ipaddrs.add_items(
                 items=diff_ipaddrs.missing, callback=_report_ipaddr
             )
@@ -178,6 +181,7 @@ class IPFabricNetboxDeviceCollectionReconciler(Reconciler):
 
         nb_col.cache["interfaces"] = nb_col_ifaces
         nb_col.cache["ipaddrs"] = nb_col_ipaddrs
+
 
 # async def _execute_changes(
 #     params: dict,
