@@ -44,7 +44,12 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     install_requires=requirements(),
-    entry_points={"nauti.plugins": ["devices = nauti_ipfabric_netbox.devices"]},
+    entry_points={
+        "nauti.plugins": [
+            "devices = nauti_ipfabric_netbox.devices",
+            "sites = nauti_ipfabric_netbox.sites",
+        ]
+    },
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",

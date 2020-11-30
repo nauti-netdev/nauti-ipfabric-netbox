@@ -94,7 +94,7 @@ class IPFabricNetboxDeviceCollectionReconciler(Reconciler):
     #
     # -------------------------------------------------------------------------
 
-    def update_items(self):
+    async def update_items(self):
 
         # TODO: need to test out update to device items
         # ipf_col = self.origin
@@ -116,16 +116,13 @@ class IPFabricNetboxDeviceCollectionReconciler(Reconciler):
         actual_changes = dict()
         missing_pri_ip = dict()
 
-        update_primary_ip = nb_col.config.options.get('update_primary_ip', False)
+        update_primary_ip = nb_col.config.options.get("update_primary_ip", False)
 
         for key, key_change in changes.items():
             rec = nb_col.items[key]
             if (ipaddr := key_change.pop("ipaddr", None)) is not None:
                 if any(
-                    (
-                        rec["ipaddr"] == "",
-                        (ipaddr and (update_primary_ip is True)),
-                    )
+                    (rec["ipaddr"] == "", (ipaddr and (update_primary_ip is True)),)
                 ):
                     key_change["ipaddr"] = ipaddr
                     missing_pri_ip[key] = key_change
