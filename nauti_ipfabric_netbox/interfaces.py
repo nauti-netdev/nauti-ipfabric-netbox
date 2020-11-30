@@ -47,7 +47,7 @@ class IPFabricNetboxInterfaceReconciler(Reconciler):
             _key, _fields = _item
             _res.raise_for_status()
             _hostname, _if_name = fields_fn(_fields)
-            log.info(f"CREATE:OK: interface {_hostname}, {_if_name}", flush=True)
+            log.info(f"CREATE:OK: interface {_hostname}, {_if_name}")
 
         log.info("CREATE:BEGIN: Netbox interfaces ...")
         await nb_col.add_items(items=missing, callback=_done)
@@ -65,7 +65,7 @@ class IPFabricNetboxInterfaceReconciler(Reconciler):
             _fields = nb_col.items[_key]
             _hostname, _ifname = fields_fn(_fields)
             _res.raise_for_status()
-            log.info(f"CHANGE:OK: interface {_hostname}, {_ifname}", flush=True)
+            log.info(f"CHANGE:OK: interface {_hostname}, {_ifname}")
 
         log.info("CHANGE:BEGIN: Netbox interfaces ...")
         await nb_col.update_items(items=changes, callback=_done)

@@ -17,13 +17,14 @@ Device collection.
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-import asyncio
 
 from httpx import Response
+
 from nauti.tasks.reconile import Reconciler
 from nauti.log import get_logger
 from nauti.collection import get_collection
 from nauti.diff import diff
+from nauti.igather import iawait
 
 
 @Reconciler.register(origin="ipfabric", target="netbox", collection="devices")
@@ -164,15 +165,15 @@ class IPFabricNetboxDeviceCollectionReconciler(Reconciler):
         # so TODO: cleanup.
         # -------------------------------------------------------------------------
 
-        await asyncio.gather(
-            *(
-                ipf_col_ipaddrs.fetch(
-                    filters=f"and(hostname = {_item['hostname']}, ip = '{_item['loginIp']}')"
-                )
-                for _item in [ipf_col.source_record_keys[key] for key in missing.keys()]
+        log.info("Fetching IP Fabric IP records ...")
+        tasks = [
+            ipf_col_ipaddrs.fetch(
+                filters=f"and(hostname = {_item['hostname']}, ip = '{_item['loginIp']}')"
             )
-        )
+            for _item in [ipf_col.source_record_keys[key] for key in missing.keys()]
+        ]
 
+        await iawait(tasks, limit=50)
         ipf_col_ipaddrs.make_keys()
 
         # -------------------------------------------------------------------------
@@ -180,15 +181,16 @@ class IPFabricNetboxDeviceCollectionReconciler(Reconciler):
         # need to be stored into Netbox (e.g. description)
         # -------------------------------------------------------------------------
 
-        await asyncio.gather(
-            *(
-                ipf_col_ifaces.fetch(
-                    filters=f"and(hostname = {_item['hostname']}, intName = {_item['intName']})"
-                )
-                for _item in ipf_col_ipaddrs.source_record_keys.values()
-            )
-        )
+        log.info("Fetching IP Fabric interface records ...")
 
+        tasks = [
+            ipf_col_ifaces.fetch(
+                filters=f"and(hostname = {_item['hostname']}, intName = {_item['intName']})"
+            )
+            for _item in ipf_col_ipaddrs.source_record_keys.values()
+        ]
+
+        await iawait(tasks, limit=50)
         ipf_col_ifaces.make_keys()
 
         # -------------------------------------------------------------------------
