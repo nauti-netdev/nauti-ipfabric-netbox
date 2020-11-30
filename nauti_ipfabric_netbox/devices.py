@@ -1,3 +1,22 @@
+"""
+This file contains the Reconciler code for IP Fabric Device collection -> Netbox
+Device collection.
+"""
+#  Copyright (C) 2020  Jeremy Schulman
+#
+#  This program is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation, either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
 import asyncio
 
 from httpx import Response
@@ -13,6 +32,12 @@ class IPFabricNetboxDeviceCollectionReconciler(Reconciler):
     This class defines the reconcile methods to sync the differences between the
     IP Fabric and the Netbox systems for the "devices" collection.
     """
+
+    # -------------------------------------------------------------------------
+    #
+    #                           Add New Items
+    #
+    # -------------------------------------------------------------------------
 
     async def add_items(self):
 
@@ -40,7 +65,7 @@ class IPFabricNetboxDeviceCollectionReconciler(Reconciler):
             nb_col.source_records.append(_res.json())
 
         await nb_col.add_items(items=missing, callback=_report_device)
-        await self._ensure_primary_ipaddrs()
+        await self._ensure_primary_ipaddrs(missing=missing)
 
         # -------------------------------------------------------------------------
         # for each of the missing device records perform a "change request" on the
@@ -65,15 +90,70 @@ class IPFabricNetboxDeviceCollectionReconciler(Reconciler):
 
     # -------------------------------------------------------------------------
     #
+    #                           Update Existing Items
+    #
+    # -------------------------------------------------------------------------
+
+    def update_items(self):
+
+        # TODO: need to test out update to device items
+        # ipf_col = self.origin
+
+        nb_col = self.target
+        changes = self.diff_res.changes
+        log = get_logger()
+
+        def _report(change, res: Response):
+            ch_key, ch_fields = change
+            ch_rec = nb_col.items[ch_key]
+            ident = f"device {ch_rec['hostname']}"
+            log.error(
+                f"CHANGE:FAIL: {ident}, {res.text}"
+                if res.is_error
+                else f"CHANGE:OK: {ident}"
+            )
+
+        actual_changes = dict()
+        missing_pri_ip = dict()
+
+        update_primary_ip = nb_col.config.options.get('update_primary_ip', False)
+
+        for key, key_change in changes.items():
+            rec = nb_col.items[key]
+            if (ipaddr := key_change.pop("ipaddr", None)) is not None:
+                if any(
+                    (
+                        rec["ipaddr"] == "",
+                        (ipaddr and (update_primary_ip is True)),
+                    )
+                ):
+                    key_change["ipaddr"] = ipaddr
+                    missing_pri_ip[key] = key_change
+
+            if len(key_change):
+                actual_changes[key] = key_change
+
+        if missing_pri_ip:
+            await self._ensure_primary_ipaddrs(missing=missing_pri_ip)
+
+        if not actual_changes:
+            log.info("No required changes.")
+            return
+
+        log.info("Processing changes ... ")
+        await nb_col.update_items(changes, callback=_report)
+        log.info("Done.")
+
+    # -------------------------------------------------------------------------
+    #
     #                           Private Methods
     #
     # -------------------------------------------------------------------------
 
-    async def _ensure_primary_ipaddrs(self):
+    async def _ensure_primary_ipaddrs(self, missing: dict):
         log = get_logger()
 
         ipf_col = self.origin
-        missing = self.diff_res.missing
 
         ipf_col_ipaddrs = get_collection(source=ipf_col.source, name="ipaddrs")
         ipf_col_ifaces = get_collection(source=ipf_col.source, name="interfaces")
@@ -181,53 +261,3 @@ class IPFabricNetboxDeviceCollectionReconciler(Reconciler):
 
         nb_col.cache["interfaces"] = nb_col_ifaces
         nb_col.cache["ipaddrs"] = nb_col_ipaddrs
-
-
-# async def _execute_changes(
-#     params: dict,
-#     ipf_col: IPFabricDeviceCollection,
-#     nb_col: NetboxDeviceCollection,
-#     changes,
-# ):
-#     print("\nExaminging changes ... ", flush=True)
-#
-#     def _report(change, res: Response):
-#         ch_key, ch_fields = change
-#         ch_rec = nb_col.inventory[ch_key]
-#         ident = f"device {ch_rec['hostname']}"
-#         print(
-#             f"CHANGE:FAIL: {ident}, {res.text}"
-#             if res.is_error
-#             else f"CHANGE:OK: {ident}"
-#         )
-#
-#     actual_changes = dict()
-#     missing_pri_ip = dict()
-#
-#     for key, key_change in changes.items():
-#         rec = nb_col.inventory[key]
-#         if (ipaddr := key_change.pop("ipaddr", None)) is not None:
-#             if any(
-#                 (
-#                     rec["ipaddr"] == "",
-#                     (ipaddr and (params["force_primary_ip"] is True)),
-#                 )
-#             ):
-#                 key_change["ipaddr"] = ipaddr
-#                 missing_pri_ip[key] = key_change
-#
-#         if len(key_change):
-#             actual_changes[key] = key_change
-#
-#     if missing_pri_ip:
-#         await _ensure_primary_ipaddrs(
-#             ipf_col=ipf_col, nb_col=nb_col, missing=missing_pri_ip
-#         )
-#
-#     if not actual_changes:
-#         print("No required changes.")
-#         return
-#
-#     print("Processing changes ... ")
-#     await nb_col.update_changes(changes, callback=_report)
-#     print("Done.\n")
