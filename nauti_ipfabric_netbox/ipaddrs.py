@@ -39,12 +39,13 @@ class ReconcileIPFabricNetboxIPaddrs(Reconciler):
     async def update_items(self):
         nb_col = self.target
         changes = self.diff_res.changes
+        log = get_logger()
 
         def _done(_item, res: Response):
             _key, _changes = _item
             _hostname, _ifname = _key
             res.raise_for_status()
-            print(f"UPDATE:OK: ipaddr {_hostname}, {_ifname}", flush=True)
+            log.info(f"UPDATE:OK: ipaddr {_hostname}, {_ifname}", flush=True)
 
         await nb_col.update_items(changes, callback=_done)
 

@@ -50,6 +50,7 @@ setup(
             "sites = nauti_ipfabric_netbox.sites",
             "interfaces = nauti_ipfabric_netbox.interfaces",
             "ipaddrs = nauti_ipfabric_netbox.ipaddrs",
+            "portchans = nauti_ipfabric_netbox.portchans",
             "auditors = nauti_ipfabric_netbox.auditors",
         ]
     },

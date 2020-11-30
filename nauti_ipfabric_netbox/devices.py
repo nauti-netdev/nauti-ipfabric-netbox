@@ -221,7 +221,7 @@ class IPFabricNetboxDeviceCollectionReconciler(Reconciler):
                 log.error(f"CREATE:FAIL: interface {hname}, {iname}: {_res.text}")
                 return
 
-            print(f"CREATE:OK: interface {hname}, {iname}.")
+            log.info(f"CREATE:OK: interface {hname}, {iname}.")
             nb_col_ifaces.source_records.append(_res.json())
 
         if diff_ifaces.missing:

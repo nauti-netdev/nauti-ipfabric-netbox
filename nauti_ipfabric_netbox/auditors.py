@@ -25,3 +25,8 @@ class AuditIPF2NBInterfaces(NetboxWithDeviceAuditor):
 @Auditor.register("ipfabric", "netbox", "ipaddrs")
 class AuditIPF2NBIPAddrs(NetboxWithDeviceAuditor):
     pass
+
+
+@Auditor.register("ipfabric", "netbox", "portchans")
+class AuditIPF2NBPortchans(NetboxWithDeviceAuditor):
+    pass
