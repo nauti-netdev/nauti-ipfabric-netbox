@@ -50,7 +50,7 @@ setup(
             "sites = nauti_ipfabric_netbox.sites",
             "interfaces = nauti_ipfabric_netbox.interfaces",
             "ipaddrs = nauti_ipfabric_netbox.ipaddrs",
-            "auditors = nauti_ipfabric_netbox.auditors"
+            "auditors = nauti_ipfabric_netbox.auditors",
         ]
     },
     classifiers=[

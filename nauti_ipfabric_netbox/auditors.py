@@ -17,11 +17,11 @@ from nauti.auditor import Auditor
 from nauti_netbox.auditors import NetboxWithDeviceAuditor
 
 
-@Auditor.register('ipfabric', 'netbox', 'interfaces')
+@Auditor.register("ipfabric", "netbox", "interfaces")
 class AuditIPF2NBInterfaces(NetboxWithDeviceAuditor):
     pass
 
 
-@Auditor.register('ipfabric', 'netbox', 'ipaddrs')
+@Auditor.register("ipfabric", "netbox", "ipaddrs")
 class AuditIPF2NBIPAddrs(NetboxWithDeviceAuditor):
     pass

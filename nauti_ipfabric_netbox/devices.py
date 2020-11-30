@@ -107,16 +107,15 @@ class IPFabricNetboxDeviceCollectionReconciler(Reconciler):
             ch_key, ch_fields = change
             ch_rec = nb_col.items[ch_key]
             ident = f"device {ch_rec['hostname']}"
-            log.error(
-                f"CHANGE:FAIL: {ident}, {res.text}"
-                if res.is_error
-                else f"CHANGE:OK: {ident}"
-            )
+            if res.is_error:
+                log.error(f"CHANGE:FAIL: {ident}, {res.text}")
+                return
+
+            log.info(f"CHANGE:OK: {ident}")
 
         actual_changes = dict()
         missing_pri_ip = dict()
 
-        breakpoint()
         update_primary_ip = nb_col.config.options.get("update_primary_ip", False)
 
         for key, key_change in changes.items():

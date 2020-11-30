@@ -31,9 +31,7 @@ class ReconcileIPFabricNetboxIPaddrs(Reconciler):
         def _done(_item, _res: Response):
             _key, _fields = _item
             _res.raise_for_status()
-            ident = (
-                f"ipaddr {_fields['hostname']}, {_fields['interface']}, {_fields['ipaddr']}"
-            )
+            ident = f"ipaddr {_fields['hostname']}, {_fields['interface']}, {_fields['ipaddr']}"
             log.info(f"CREATE:OK: {ident}")
 
         await nb_col.add_items(self.diff_res.missing, callback=_done)
