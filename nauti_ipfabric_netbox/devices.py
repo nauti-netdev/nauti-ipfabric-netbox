@@ -116,6 +116,7 @@ class IPFabricNetboxDeviceCollectionReconciler(Reconciler):
         actual_changes = dict()
         missing_pri_ip = dict()
 
+        breakpoint()
         update_primary_ip = nb_col.config.options.get("update_primary_ip", False)
 
         for key, key_change in changes.items():
