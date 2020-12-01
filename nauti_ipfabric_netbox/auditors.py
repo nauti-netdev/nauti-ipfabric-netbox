@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 #  Copyright (C) 2020  Jeremy Schulman
 #
 #  This program is free software: you can redistribute it and/or modify
@@ -14,31 +12,21 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
-#
 
-# For use with the invoke tool, see: http://www.pyinvoke.org/
-#
-# References
-# ----------
-#
-# Black:
-# Flake8: https://flake8.pycqa.org/en/latest/user/configuration.html
+from nauti.auditor import Auditor
+from nauti_netbox.auditors import NetboxWithDeviceAuditor
 
 
-from invoke import task
+@Auditor.register("ipfabric", "netbox", "interfaces")
+class AuditIPF2NBInterfaces(NetboxWithDeviceAuditor):
+    pass
 
 
-@task
-def precheck(ctx):
-    # ctx.run("black . --exclude tests")
-    ctx.run("flake8 .")
-    ctx.run("pre-commit run -a")
-    ctx.run("interrogate -c pyproject.toml", pty=True)
+@Auditor.register("ipfabric", "netbox", "ipaddrs")
+class AuditIPF2NBIPAddrs(NetboxWithDeviceAuditor):
+    pass
 
 
-@task
-def clean(ctx):
-    ctx.run("python setup.py clean")
-    ctx.run("rm -rf netcfgbu.egg-info")
-    ctx.run("rm -rf .pytest_cache .pytest_tmpdir .coverage")
-    ctx.run("rm -rf htmlcov")
+@Auditor.register("ipfabric", "netbox", "portchans")
+class AuditIPF2NBPortchans(NetboxWithDeviceAuditor):
+    pass
