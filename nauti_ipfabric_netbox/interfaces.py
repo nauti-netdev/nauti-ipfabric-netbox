@@ -70,3 +70,21 @@ class IPFabricNetboxInterfaceReconciler(Reconciler):
         log.info("CHANGE:BEGIN: Netbox interfaces ...")
         await nb_col.update_items(items=changes, callback=_done)
         log.info("CHANGE:DONE: Netbox interfaces.")
+
+    async def delete_items(self):
+        nb_col = self.diff_res.target
+        changes = self.diff_res.extras
+        fields_fn = itemgetter("hostname", "interface")
+
+        log = get_logger()
+
+        def _done(_item, _res: Response):
+            _key, _ch_fields = _item
+            _fields = nb_col.items[_key]
+            _hostname, _ifname = fields_fn(_fields)
+            _res.raise_for_status()
+            log.info(f"DELETE:OK: interface {_hostname}, {_ifname}")
+
+        log.info("DELETE:BEGIN: Netbox interfaces ...")
+        await nb_col.delete_items(items=changes, callback=_done)
+        log.info("DELETE:DONE: Netbox interfaces.")
