@@ -14,6 +14,12 @@
 #  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # -----------------------------------------------------------------------------
+# System Imports
+# -----------------------------------------------------------------------------
+
+from operator import itemgetter
+
+# -----------------------------------------------------------------------------
 # Public Imports
 # -----------------------------------------------------------------------------
 
@@ -34,7 +40,9 @@ class ReconcileIPFabricNetboxIPaddrs(Reconciler):
             ident = f"ipaddr {_fields['hostname']}, {_fields['interface']}, {_fields['ipaddr']}"
             log.info(f"CREATE:OK: {ident}")
 
+        log.info("CREATE:BEGIN: Netbox ipaddrs ...")
         await nb_col.add_items(self.diff_res.missing, callback=_done)
+        log.info("CREATE:DONE: Netbox ipaddrs.")
 
     async def update_items(self):
         nb_col = self.target
@@ -45,9 +53,24 @@ class ReconcileIPFabricNetboxIPaddrs(Reconciler):
             _key, _changes = _item
             _hostname, _ifname = _key
             res.raise_for_status()
-            log.info(f"UPDATE:OK: ipaddr {_hostname}, {_ifname}", flush=True)
+            log.info(f"UPDATE:OK: ipaddr {_hostname}, {_ifname}")
 
+        log.info("UPDATE:BEGIN: Netbox ipaddrs ...")
         await nb_col.update_items(changes, callback=_done)
+        log.info("UPDATE:DONE: Netbox ipaddrs.")
 
     async def delete_items(self):
-        raise NotImplementedError()
+        nb_col = self.target
+        changes = self.diff_res.extras
+        log = get_logger()
+        fields_fn = itemgetter("hostname", "ipaddr")
+
+        def _done(_item, res: Response):
+            _key, _fields = _item
+            _hostname, _ipaddr = fields_fn(_fields)
+            res.raise_for_status()
+            log.info(f"DELETE:OK: ipaddr {_hostname}, {_ipaddr}")
+
+        log.info("DELETE:BEGIN: Netbox ipaddrs ...")
+        await nb_col.delete_items(changes, callback=_done)
+        log.info("DELETE:DONE: Netbox ipaddrs.")
