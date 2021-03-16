@@ -52,7 +52,7 @@ class ReconcileIPFabricNetboxPortChans(Reconciler):
         def _report(_item, res: Response):
             _key, _ch_fields = _item
             _fields = nb_col.items[_key]
-            ident = f"{_fields['hostname']}, {_fields['interface']} -> {_fields['portchan']}"
+            ident = f"{_fields['hostname']}, {_fields['interface']} -> {_ch_fields['portchan']}"
             if res.is_error:
                 log.error(f"CHANGE:FAIL: {ident}, {res.text}")
                 return
