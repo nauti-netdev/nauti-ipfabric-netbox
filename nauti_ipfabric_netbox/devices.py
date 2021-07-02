@@ -168,7 +168,7 @@ class IPFabricNetboxDeviceCollectionReconciler(Reconciler):
         log.info("Fetching IP Fabric IP records ...")
         tasks = [
             ipf_col_ipaddrs.fetch(
-                filters=f"and(hostname = {_item['hostname']}, ip = '{_item['loginIp']}')"
+                filters=f"and(hostname = '{_item['hostname']}', ip = '{_item['loginIp']}')"
             )
             for _item in [ipf_col.source_record_keys[key] for key in missing.keys()]
         ]
@@ -185,7 +185,8 @@ class IPFabricNetboxDeviceCollectionReconciler(Reconciler):
 
         tasks = [
             ipf_col_ifaces.fetch(
-                filters=f"and(hostname = {_item['hostname']}, intName = {_item['intName']})"
+                hostname=_item["hostname"],
+                filters=f"and(hostname = '{_item['hostname']}', intName = '{_item['intName']}')",
             )
             for _item in ipf_col_ipaddrs.source_record_keys.values()
         ]
